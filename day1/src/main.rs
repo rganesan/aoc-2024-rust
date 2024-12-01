@@ -22,11 +22,10 @@ fn part1(filename: &str) -> Result<i32> {
     left.sort();
     right.sort();
 
-    let mut distance = 0;
-    for (l, r) in left.iter().zip(right.iter()) {
-        distance += (l - r).abs();
-    }
-
+    let distance = left
+        .iter()
+        .zip(right.iter())
+        .fold(0, |acc, (&l, &r)| acc + (l - r).abs());
     Ok(distance)
 }
 
@@ -45,11 +44,9 @@ fn part2(filename: &str) -> Result<i32> {
         *right.entry(loc_ids[1]).or_insert(0) += 1;
     }
 
-    let mut similarity = 0;
-    for l in left.iter() {
-        let repeats = right.get(l).unwrap_or(&0);
-        similarity += l * repeats;
-    }
+    let similarity = left
+        .iter()
+        .fold(0, |acc, e| acc + e * right.get(e).unwrap_or(&0));
 
     Ok(similarity)
 }
