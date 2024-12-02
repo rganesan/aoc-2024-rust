@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::time::Instant;
 
+// Find bad level and return the index if found
 fn find_bad_level(levels: &[i32]) -> Option<usize> {
     let increasing = levels[0] < levels[1];
     for i in 1..levels.len() {
@@ -40,22 +41,34 @@ fn part2(filename: &str) -> Result<u32> {
     let mut nsafe = 0;
     for line in reader.lines() {
         let line = line?;
-        let levels = line
+        let mut levels = line
             .split_ascii_whitespace()
             .map(|n| n.parse::<i32>().unwrap())
             .collect::<Vec<_>>();
         if let Some(i) = find_bad_level(&levels) {
-            for i in 0..=i {
-                let mut levels = levels.clone();
-                levels.remove(i);
+            let mut saved = levels.remove(i);
+            if find_bad_level(&levels).is_none() {
+                nsafe += 1;
+                continue;
+            }
+            // try removing previous level
+            std::mem::swap(&mut levels[i - 1], &mut saved);
+            if find_bad_level(&levels).is_none() {
+                nsafe += 1;
+                continue;
+            }
+            // try removing the one before, it may reset increase/decrease
+            if i > 1 {
+                levels[i - 2] = saved;
                 if find_bad_level(&levels).is_none() {
                     nsafe += 1;
-                    break;
+                    continue;
                 }
             }
-        } else {
-            nsafe += 1;
+            // if we got here, removing one level doesn't help, record is unsafe
+            continue;
         }
+        nsafe += 1;
     }
 
     Ok(nsafe)
