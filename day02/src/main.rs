@@ -4,16 +4,16 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::time::Instant;
 
-fn is_safe(levels: &[i32]) -> bool {
+fn find_bad_level(levels: &[i32]) -> Option<usize> {
     let increasing = levels[0] < levels[1];
     for i in 1..levels.len() {
         let diff = levels[i] - levels[i - 1];
         // println!("{increasing} {i} {diff} {levels:?}");
         if (increasing && diff <= 0) || (!increasing && diff >= 0) || diff.abs() > 3 {
-            return false;
+            return Some(i);
         }
     }
-    true
+    None
 }
 
 fn part1(filename: &str) -> Result<u32> {
@@ -26,7 +26,7 @@ fn part1(filename: &str) -> Result<u32> {
             .split_ascii_whitespace()
             .map(|n| n.parse::<i32>().unwrap())
             .collect::<Vec<_>>();
-        if is_safe(&levels) {
+        if find_bad_level(&levels).is_none() {
             nsafe += 1;
         }
     }
@@ -44,17 +44,17 @@ fn part2(filename: &str) -> Result<u32> {
             .split_ascii_whitespace()
             .map(|n| n.parse::<i32>().unwrap())
             .collect::<Vec<_>>();
-        if is_safe(&levels) {
-            nsafe += 1;
-            continue;
-        }
-        for i in 0..levels.len() {
-            let mut levels = levels.clone();
-            levels.remove(i);
-            if is_safe(&levels) {
-                nsafe += 1;
-                break;
+        if let Some(i) = find_bad_level(&levels) {
+            for i in 0..=i {
+                let mut levels = levels.clone();
+                levels.remove(i);
+                if find_bad_level(&levels).is_none() {
+                    nsafe += 1;
+                    break;
+                }
             }
+        } else {
+            nsafe += 1;
         }
     }
 
